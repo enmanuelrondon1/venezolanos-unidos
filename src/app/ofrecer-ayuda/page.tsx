@@ -47,12 +47,7 @@ export default function OfrecerAyuda() {
 
   return (
     <main className="min-h-screen bg-background">
-      <nav className="border-b px-6 py-4">
-        <a href="/" className="flex items-center gap-2 w-fit">
-          <span className="text-2xl">🇻🇪</span>
-          <span className="font-semibold text-lg">VenezuelaSolidaria</span>
-        </a>
-      </nav>
+  
 
       <div className="max-w-xl mx-auto px-6 py-16">
         {enviado ? (

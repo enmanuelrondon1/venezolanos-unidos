@@ -1,89 +1,85 @@
+// src/app/ofertas/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 
-type Solicitud = {
+type Oferta = {
   id: string;
   nombre: string;
   telefono: string;
   ciudad: string;
-  categoria: string;
+  categorias: string[];
   descripcion: string;
-  urgencia: string;
   created_at: string;
 };
 
 const ICONOS: Record<string, string> = {
-  Alimentación: "🍽️",
-  Medicamentos: "💊",
-  Vivienda: "🏠",
-  Trabajo: "💼",
+  "Alimentación": "🍽️",
+  "Medicamentos": "💊",
+  "Vivienda": "🏠",
+  "Trabajo / empleo": "💼",
   "Niños y familias": "👶",
-  Transporte: "🚌",
-  Otro: "🤝",
+  "Transporte": "🚌",
+  "Apoyo económico": "💰",
+  "Orientación": "🧭",
 };
 
-const URGENCIA_COLORS: Record<string, string> = {
-  Alta: "bg-red-50 text-red-600 border-red-100",
-  Media: "bg-yellow-50 text-yellow-700 border-yellow-100",
-  Baja: "bg-green-50 text-green-700 border-green-100",
-};
+const CATEGORIAS = [
+  "Todos",
+  "Alimentación",
+  "Medicamentos",
+  "Vivienda",
+  "Trabajo / empleo",
+  "Niños y familias",
+  "Transporte",
+  "Apoyo económico",
+  "Orientación",
+];
 
-export default function Solicitudes() {
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+export default function Ofertas() {
+  const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState("Todos");
-
-  const categorias = [
-    "Todos",
-    "Alimentación",
-    "Medicamentos",
-    "Vivienda",
-    "Trabajo",
-    "Niños y familias",
-    "Transporte",
-    "Otro",
-  ];
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("categoria");
     if (cat) setFiltro(cat);
 
-    const fetchSolicitudes = async () => {
+    const fetchOfertas = async () => {
       setCargando(true);
       const { data } = await supabase
-        .from("solicitudes")
+        .from("ofertas")
         .select("*")
         .order("created_at", { ascending: false });
-      setSolicitudes(data || []);
+      setOfertas(data || []);
       setCargando(false);
     };
-    fetchSolicitudes();
+    fetchOfertas();
   }, []);
 
   const filtradas =
     filtro === "Todos"
-      ? solicitudes
-      : solicitudes.filter((s) => s.categoria === filtro);
+      ? ofertas
+      : ofertas.filter((o) => o.categorias?.includes(filtro));
 
   return (
     <main className="min-h-screen bg-background">
-     
+    
 
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-10">
-          <h1 className="text-3xl font-bold mb-2">Solicitudes de ayuda</h1>
+          <h1 className="text-3xl font-bold mb-2">Ofertas de ayuda disponibles</h1>
           <p className="text-muted-foreground">
-            {solicitudes.length} persona{solicitudes.length !== 1 ? "s" : ""}{" "}
-            necesitan apoyo ahora mismo.
+            {ofertas.length} persona{ofertas.length !== 1 ? "s" : ""} dispuesta
+            {ofertas.length !== 1 ? "s" : ""} a apoyar ahora mismo.
           </p>
         </div>
 
         {/* Filtros */}
         <div className="flex gap-2 flex-wrap mb-8">
-          {categorias.map((cat) => (
+          {CATEGORIAS.map((cat) => (
             <button
               key={cat}
               onClick={() => setFiltro(cat)}
@@ -103,60 +99,62 @@ export default function Solicitudes() {
         {/* Lista */}
         {cargando ? (
           <div className="text-center py-20 text-muted-foreground">
-            Cargando solicitudes...
+            Cargando ofertas...
           </div>
         ) : filtradas.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-4">🕊️</div>
             <p className="text-muted-foreground">
-              No hay solicitudes en esta categoría.
+              No hay ofertas en esta categoría todavía.
             </p>
           </div>
         ) : (
           <div className="grid gap-4">
-            {filtradas.map((s) => (
+            {filtradas.map((o) => (
               <div
-                key={s.id}
+                key={o.id}
                 className="border border-border rounded-2xl p-5 hover:border-gray-300 transition"
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">
-                      {ICONOS[s.categoria] || "🤝"}
+                      {ICONOS[o.categorias?.[0]] || "🤝"}
                     </span>
                     <div>
-                      <p className="font-medium">{s.nombre}</p>
+                      <p className="font-medium">{o.nombre}</p>
                       <p className="text-sm text-muted-foreground">
-                        {s.ciudad}
+                        {o.ciudad}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span
-                      className={`text-xs px-2.5 py-1 rounded-full border font-medium ${URGENCIA_COLORS[s.urgencia] || URGENCIA_COLORS["Media"]}`}
-                    >
-                      {s.urgencia}
-                    </span>
-                    <span className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground">
-                      {s.categoria}
-                    </span>
+                  <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                    {o.categorias?.map((cat) => (
+                      <span
+                        key={cat}
+                        className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground"
+                      >
+                        {cat}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  {s.descripcion}
-                </p>
+                {o.descripcion && (
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    {o.descripcion}
+                  </p>
+                )}
 
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">
-                    {new Date(s.created_at).toLocaleDateString("es-VE", {
+                    {new Date(o.created_at).toLocaleDateString("es-VE", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                   </span>
                   <a
-                    href={`https://wa.me/${s.telefono.replace(/\D/g, "").replace(/^0/, "58")}?text=${encodeURIComponent(`Hola ${s.nombre}, vi tu solicitud de *${s.categoria}* en VenezuelaSolidaria y me gustaría ayudarte 🙏`)}`}
+                    href={`https://wa.me/${o.telefono.replace(/\D/g, "").replace(/^0/, "58")}?text=${encodeURIComponent(`Hola ${o.nombre}, vi tu oferta de ayuda en VenezuelaSolidaria y necesito apoyo 🙏`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 text-sm text-green-600 hover:text-green-500 font-medium transition"

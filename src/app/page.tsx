@@ -19,24 +19,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Navbar */}
-      <nav className="border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🇻🇪</span>
-          <span className="font-semibold text-lg">VenezuelaSolidaria</span>
-        </div>
-        <div className="flex gap-3">
-          <Button asChild variant="outline" size="sm">
-            <a href="/solicitudes">Ver solicitudes</a>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <a href="/pedir-ayuda">Necesito ayuda</a>
-          </Button>
-          <Button asChild size="sm" className="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 border-0">
-            <a href="/ofrecer-ayuda">Quiero ayudar</a>
-          </Button>
-        </div>
-      </nav>
+    
 
       {/* Hero */}
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
