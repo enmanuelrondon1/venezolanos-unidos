@@ -1,3 +1,4 @@
+// src/app/pedir-ayuda/page.tsx
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +10,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import TurnstileWidget from "@/components/turnstile-widget";
 
 export default function PedirAyuda() {
   const [enviado, setEnviado] = useState(false);
@@ -18,6 +20,7 @@ export default function PedirAyuda() {
     nombre: "", telefono: "", ciudad: "",
     categoria: "", descripcion: "", urgencia: "Media",
   });
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,8 +28,30 @@ export default function PedirAyuda() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.categoria) {
+      setError("Selecciona una categoría de ayuda.");
+      return;
+    }
+    if (!turnstileToken) {
+      setError("Por favor completa la verificación de seguridad.");
+      return;
+    }
     setCargando(true);
     setError("");
+
+    const verify = await fetch("/api/verify-turnstile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: turnstileToken }),
+    });
+    const verifyData = await verify.json();
+
+    if (!verifyData.success) {
+      setError("La verificación de seguridad falló. Intenta de nuevo.");
+      setCargando(false);
+      return;
+    }
+
     const { error } = await supabase.from("solicitudes").insert([form]);
     if (error) setError("Hubo un error al enviar. Intenta de nuevo.");
     else setEnviado(true);
@@ -35,8 +60,6 @@ export default function PedirAyuda() {
 
   return (
     <main className="min-h-screen bg-background">
-     
-
       <div className="max-w-xl mx-auto px-6 py-16">
         {enviado ? (
           <div className="text-center py-20">
@@ -112,6 +135,8 @@ export default function PedirAyuda() {
                   ))}
                 </div>
               </div>
+
+              <TurnstileWidget onVerify={setTurnstileToken} />
 
               <Button type="submit" disabled={cargando} className="w-full bg-gray-900 hover:bg-gray-700">
                 {cargando ? "Enviando..." : "Enviar solicitud"}

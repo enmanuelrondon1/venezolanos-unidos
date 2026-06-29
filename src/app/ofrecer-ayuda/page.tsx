@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import TurnstileWidget from "@/components/turnstile-widget";
 
 const CATEGORIAS = [
   "Alimentación", "Medicamentos", "Vivienda",
@@ -20,6 +21,7 @@ export default function OfrecerAyuda() {
   const [form, setForm] = useState({
     nombre: "", telefono: "", ciudad: "", descripcion: "",
   });
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,19 +33,37 @@ export default function OfrecerAyuda() {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (categorias.length === 0) {
-      setError("Selecciona al menos una categoría de ayuda.");
-      return;
-    }
-    setCargando(true);
-    setError("");
-    const { error } = await supabase.from("ofertas").insert([{ ...form, categorias }]);
-    if (error) setError("Hubo un error al enviar. Intenta de nuevo.");
-    else setEnviado(true);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (categorias.length === 0) {
+    setError("Selecciona al menos una categoría de ayuda.");
+    return;
+  }
+  if (!turnstileToken) {
+    setError("Por favor completa la verificación de seguridad.");
+    return;
+  }
+  setCargando(true);
+  setError("");
+
+  const verify = await fetch("/api/verify-turnstile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: turnstileToken }),
+  });
+  const verifyData = await verify.json();
+
+  if (!verifyData.success) {
+    setError("La verificación de seguridad falló. Intenta de nuevo.");
     setCargando(false);
-  };
+    return;
+  }
+
+  const { error } = await supabase.from("ofertas").insert([{ ...form, categorias }]);
+  if (error) setError("Hubo un error al enviar. Intenta de nuevo.");
+  else setEnviado(true);
+  setCargando(false);
+};
 
   return (
     <main className="min-h-screen bg-background">
@@ -113,6 +133,8 @@ export default function OfrecerAyuda() {
                   onChange={handleChange} rows={4}
                   placeholder="Describe cómo puedes ayudar, disponibilidad..." />
               </div>
+
+              <TurnstileWidget onVerify={setTurnstileToken} />
 
               <Button type="submit" disabled={cargando}
                 className="w-full bg-yellow-400 hover:bg-yellow-300 text-yellow-900">
