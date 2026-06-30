@@ -1,5 +1,8 @@
+//src/app/page.tsx
+
 "use client";
 import { useEffect, useState } from "react";
+
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 
@@ -7,13 +10,13 @@ export default function Home() {
   const [stats, setStats] = useState({ solicitudes: 0, ofertas: 0 });
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const [{ count: s }, { count: o }] = await Promise.all([
-        supabase.from("solicitudes").select("*", { count: "exact", head: true }),
-        supabase.from("ofertas").select("*", { count: "exact", head: true }),
-      ]);
-      setStats({ solicitudes: s || 0, ofertas: o || 0 });
-    };
+   const fetchStats = async () => {
+  const [{ count: s }, { count: o }] = await Promise.all([
+    supabase.from("solicitudes_publicas").select("*", { count: "exact", head: true }),
+    supabase.from("ofertas_publicas").select("*", { count: "exact", head: true }),
+  ]);
+  setStats({ solicitudes: s || 0, ofertas: o || 0 });
+};
     fetchStats();
   }, []);
 

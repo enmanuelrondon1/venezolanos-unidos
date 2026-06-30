@@ -1,3 +1,6 @@
+//src/app/ofrecer-ayuda/page.tsx
+
+
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
