@@ -11,6 +11,7 @@ const LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <nav className="border-b px-6 py-4 flex items-center justify-between">

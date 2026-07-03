@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type Solicitud = {
   id: string;
@@ -42,8 +43,16 @@ export default function AdminPanel() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push("/admin/login");
+      return;
+    }
     fetchData();
-  }, []);
+  };
+  checkAuth();
+}, []);
 
   const fetchData = async () => {
     setCargando(true);
@@ -56,16 +65,28 @@ export default function AdminPanel() {
     setCargando(false);
   };
 
-  const handleResuelto = async (tabla: "solicitudes" | "ofertas", id: string, valor: boolean) => {
-    await supabase.from(tabla).update({ resuelto: valor }).eq("id", id);
+ const handleResuelto = async (tabla: "solicitudes" | "ofertas", id: string, valor: boolean) => {
+  const { error } = await supabase.from(tabla).update({ resuelto: valor }).eq("id", id);
+  if (error) {
+    toast.error("Error al actualizar.");
+  } else {
+    toast.success(valor ? "Marcado como resuelto." : "Marcado como pendiente.");
     fetchData();
-  };
+  }
+};
 
-  const handleEliminar = async (tabla: "solicitudes" | "ofertas", id: string) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar este registro?")) return;
-    await supabase.from(tabla).delete().eq("id", id);
+const handleEliminar = async (tabla: "solicitudes" | "ofertas", id: string) => {
+  if (!confirm("¿Estás seguro de que quieres eliminar este registro?")) return;
+  const { error } = await supabase.from(tabla).delete().eq("id", id);
+  if (error) {
+    toast.error("Error al eliminar.");
+  } else {
+    toast.success("Registro eliminado.");
     fetchData();
-  };
+  }
+};
+
+  
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

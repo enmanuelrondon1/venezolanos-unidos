@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import TurnstileWidget from "@/components/turnstile-widget";
+import { toast } from "sonner";
 
 const CATEGORIAS = [
   "Alimentación", "Medicamentos", "Vivienda",
@@ -19,7 +20,6 @@ const CATEGORIAS = [
 export default function OfrecerAyuda() {
   const [enviado, setEnviado] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState("");
   const [categorias, setCategorias] = useState<string[]>([]);
   const [form, setForm] = useState({
     nombre: "", telefono: "", ciudad: "", descripcion: "",
@@ -36,18 +36,17 @@ export default function OfrecerAyuda() {
     );
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (categorias.length === 0) {
-    setError("Selecciona al menos una categoría de ayuda.");
+    toast.error("Selecciona al menos una categoría de ayuda.");
     return;
   }
   if (!turnstileToken) {
-    setError("Por favor completa la verificación de seguridad.");
+    toast.error("Por favor completa la verificación de seguridad.");
     return;
   }
   setCargando(true);
-  setError("");
 
   const verify = await fetch("/api/verify-turnstile", {
     method: "POST",
@@ -57,17 +56,19 @@ export default function OfrecerAyuda() {
   const verifyData = await verify.json();
 
   if (!verifyData.success) {
-    setError("La verificación de seguridad falló. Intenta de nuevo.");
+    toast.error("La verificación de seguridad falló. Intenta de nuevo.");
     setCargando(false);
     return;
   }
 
   const { error } = await supabase.from("ofertas").insert([{ ...form, categorias }]);
-  if (error) setError("Hubo un error al enviar. Intenta de nuevo.");
-  else setEnviado(true);
+  if (error) {
+    toast.error("Hubo un error al enviar. Intenta de nuevo.");
+  } else {
+    setEnviado(true);
+  }
   setCargando(false);
 };
-
   return (
     <main className="min-h-screen bg-background">
   
@@ -90,10 +91,7 @@ export default function OfrecerAyuda() {
               <p className="text-muted-foreground">Tu apoyo puede cambiar la vida de alguien. Gracias por estar aquí.</p>
             </div>
 
-            {error && (
-              <div className="mb-5 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">{error}</div>
-            )}
-
+          
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <Label htmlFor="nombre">Tu nombre</Label>
